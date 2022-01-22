@@ -1,0 +1,94 @@
+{
+    "common": {
+        "name": "webuntis",
+        "version": "0.0.1",
+        "news": {
+            "0.0.1": {
+                "en": "initial release",
+                "de": "Erstveröffentlichung",
+                "ru": "Начальная версия",
+                "pt": "lançamento inicial",
+                "nl": "Eerste uitgave",
+                "fr": "Première version",
+                "it": "Versione iniziale",
+                "es": "Versión inicial",
+                "pl": "Pierwsze wydanie",
+                "zh-cn": "首次出版"
+            }
+        },
+        "title": "WebUntis",
+        "titleLang": {
+            "en": "WebUntis",
+            "de": "WebUntis",
+            "ru": "ВебУнтис",
+            "pt": "WebUntis",
+            "nl": "WebUntis",
+            "fr": "WebUntis",
+            "it": "WebUntis",
+            "es": "WebUntis",
+            "pl": "WebUntis",
+            "zh-cn": "WebUntis"
+        },
+        "desc": {
+            "en": "Adapter to get data from WebUntis",
+            "de": "Adapter um Daten von WebUntis zu bekommen",
+            "ru": "Адаптер для получения данных из WebUntis",
+            "pt": "Adaptador para obter dados do WebUntis",
+            "nl": "Adapter om gegevens van WebUntis te krijgen",
+            "fr": "Adaptateur pour récupérer les données de WebUntis",
+            "it": "Adattatore per ottenere dati da WebUntis",
+            "es": "Adaptador para obtener datos de WebUntis",
+            "pl": "Adapter do pobierania danych z WebUntis",
+            "zh-cn": "适配器从 WebUntis 获取数据"
+        },
+        "authors": [
+            "Newan <info@newan.de>"
+        ],
+        "keywords": [
+            "webuntis Stundenplan Schule"
+        ],
+        "license": "MIT",
+        "platform": "Javascript/Node.js",
+        "main": "build/main.js",
+        "icon": "webuntis.png",
+        "enabled": true,
+        "extIcon": "https://raw.githubusercontent.com/Newan/ioBroker.webuntis/main/admin/webuntis.png",
+        "readme": "https://github.com/Newan/ioBroker.webuntis/blob/main/README.md",
+        "loglevel": "info",
+        "mode": "daemon",
+        "type": "date-and-time",
+        "compact": true,
+        "connectionType": "cloud",
+        "dataSource": "poll",
+        "materialize": true,
+        "dependencies": [
+            {
+                "js-controller": ">=2.0.0"
+            }
+        ]
+    },
+    "native": {
+        "option1": true,
+        "option2": "42",
+        "username": "",
+        "client_secret": "",
+        "school": "",
+        "baseUrl": ""
+    },
+    "objects": [],
+    "instanceObjects": [
+        {
+            "_id": "info.connection",
+            "type": "state",
+            "common": {
+                "role": "indicator.connected",
+                "name": "If communication with webUntis works",
+                "type": "boolean",
+                "read": true,
+                "write": false,
+                "def": false
+            },
+            "native": {}
+        }
+    ]
+}
