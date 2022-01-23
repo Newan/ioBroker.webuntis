@@ -53,8 +53,12 @@ class Webuntis extends utils.Adapter {
         }
         else {
             this.log.debug('Api login started');
+            this.log.debug(this.config.username);
+            this.log.debug(this.config.client_secret);
             // Test to login to WebUntis
             const untis = new webuntis_1.default(this.config.school, this.config.username, this.config.client_secret, this.config.baseUrl);
+            //const untis = new APIWebUntis.WebUntisQR('untis://setschool?url=hepta.webuntis.com&school=hbs-Fürth&user=kaitlyn-stiefel&key=W5MVKSOMDXJPG6TF&schoolNumber=2545300')
+            //this.config.school, this.config.username, this.config.client_secret, this.config.baseUrl);
             untis.login().then(async () => {
                 this.log.debug('WebUntis Login erfolgreich');
                 // Now we can start
@@ -90,6 +94,7 @@ class Webuntis extends utils.Adapter {
     }
     readDataFromWebUntis() {
         const untis = new webuntis_1.default(this.config.school, this.config.username, this.config.client_secret, this.config.baseUrl);
+        //const untis = new APIWebUntis.WebUntisQR('untis://setschool?url=hepta.webuntis.com&school=hbs-Fürth&user=kaitlyn-stiefel&key=W5MVKSOMDXJPG6TF&schoolNumber=2545300')
         untis.login().then(async () => {
             this.log.debug('WebUntis Login erfolgreich');
             //Start the loop, we have an session
@@ -139,6 +144,7 @@ class Webuntis extends utils.Adapter {
             }).catch((error) => {
                 this.log.error(error);
             });
+            //todo convertUntisTime
             await this.setStateAsync(index.toString() + '.startTime', element.startTime, true);
             await this.setObjectNotExistsAsync(index.toString() + '.endTime', {
                 type: 'state',
@@ -167,7 +173,12 @@ class Webuntis extends utils.Adapter {
             }).catch((error) => {
                 this.log.error(error);
             });
-            await this.setStateAsync(index.toString() + '.name', element.su[0].name, true);
+            if (element.su && element.su.length > 0) {
+                await this.setStateAsync(index.toString() + '.name', element.su[0].name, true);
+            }
+            else {
+                await this.setStateAsync(index.toString() + '.name', null, true);
+            }
             await this.setObjectNotExistsAsync(index.toString() + '.teacher', {
                 type: 'state',
                 common: {
@@ -181,7 +192,12 @@ class Webuntis extends utils.Adapter {
             }).catch((error) => {
                 this.log.error(error);
             });
-            await this.setStateAsync(index.toString() + '.teacher', element.te[0].longname, true);
+            if (element.te && element.te.length > 0) {
+                await this.setStateAsync(index.toString() + '.teacher', element.te[0].longname, true);
+            }
+            else {
+                await this.setStateAsync(index.toString() + '.teacher', null, true);
+            }
             await this.setObjectNotExistsAsync(index.toString() + '.room', {
                 type: 'state',
                 common: {
@@ -195,7 +211,12 @@ class Webuntis extends utils.Adapter {
             }).catch((error) => {
                 this.log.error(error);
             });
-            await this.setStateAsync(index.toString() + '.room', element.ro[0].name, true);
+            if (element.ro && element.ro.length > 0) {
+                await this.setStateAsync(index.toString() + '.room', element.ro[0].name, true);
+            }
+            else {
+                await this.setStateAsync(index.toString() + '.room', null, true);
+            }
             //Next Elemet
             index = index + 1;
         }
