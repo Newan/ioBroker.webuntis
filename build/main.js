@@ -39,6 +39,7 @@ class Webuntis extends utils.Adapter {
         });
         this.on('ready', this.onReady.bind(this));
         this.on('unload', this.onUnload.bind(this));
+        this.timetableDate = new Date();
     }
     /**
      * Is called when databases are connected and adapter received configuration.
@@ -101,13 +102,15 @@ class Webuntis extends utils.Adapter {
             untis.getOwnTimetableForToday().then(async (timetable) => {
                 if (timetable.length > 0) {
                     this.log.debug('Timetable gefunden');
+                    this.timetableDate = new Date(); //info timetbale is fro today
                     await this.setTimeTable(timetable);
                     await this.setStateAsync('info.connection', true, true);
                 }
                 else {
                     //Not timetable found, search next workingday
                     this.log.info('No timetable Today, search next working day');
-                    untis.getOwnTimetableFor(this.getNextWorkDay(new Date())).then(async (timetable) => {
+                    this.timetableDate = this.getNextWorkDay(new Date());
+                    untis.getOwnTimetableFor(this.timetableDate).then(async (timetable) => {
                         this.log.debug('Timetable an anderen Tag gefunden');
                         await this.setTimeTable(timetable);
                         await this.setStateAsync('info.connection', true, true);
@@ -124,6 +127,21 @@ class Webuntis extends utils.Adapter {
     }
     //Function for Timetable
     async setTimeTable(timetable) {
+        //Ifno from this date is the timetable
+        await this.setObjectNotExistsAsync('info.timetable-date', {
+            type: 'state',
+            common: {
+                name: 'timetable-date',
+                role: 'value',
+                type: 'string',
+                write: false,
+                read: true,
+            },
+            native: {},
+        }).catch((error) => {
+            this.log.error(error);
+        });
+        await this.setStateAsync('info.timetable-date', this.timetableDate.toString(), true);
         let index = 0;
         timetable = timetable.sort((a, b) => a.startTime - b.startTime);
         this.log.debug(JSON.stringify(timetable));
