@@ -1,4 +1,4 @@
-![Logo](admin/webuntis.png)
+![Logo](https://github.com/Newan/ioBroker.webuntis/admin/webuntis.png)
 # ioBroker.webuntis
 
 [![NPM version](https://img.shields.io/npm/v/iobroker.webuntis.svg)](https://www.npmjs.com/package/iobroker.webuntis)
@@ -25,7 +25,7 @@ Zur Vorbereitung, geht man in einem Webbrowser auf die Seite ![webuntis.com](htt
 Im Suchfeld auf der Seite gibt man den gewünschten Schulnamen ein.
 Daraufhin öffnet sich eine Webseite. In der Adresszeile des Browsers stehen nun die gewünschten Daten.
 
-![webuntis_start](readme/img/webuntis_start.png)
+![webuntis_start](img/webuntis_start.png)
 
 
 Wir benötigen folgende Strings aus der Adresszeile
