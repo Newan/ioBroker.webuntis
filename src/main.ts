@@ -13,6 +13,7 @@ import APIWebUntis, { Lesson } from 'webuntis';
 class Webuntis extends utils.Adapter {
 
     private startHourScheduleTimeout: any;
+    private timetableDate: Date;
 
     public constructor(options: Partial<utils.AdapterOptions> = {}) {
         super({
@@ -21,6 +22,7 @@ class Webuntis extends utils.Adapter {
         });
         this.on('ready', this.onReady.bind(this));
         this.on('unload', this.onUnload.bind(this));
+        this.timetableDate = new Date();
     }
 
     /**
@@ -36,8 +38,13 @@ class Webuntis extends utils.Adapter {
         } else {
             this.log.debug('Api login started');
 
+
+            this.log.debug( this.config.username)
+            this.log.debug( this.config.client_secret)
+
             // Test to login to WebUntis
             const untis = new APIWebUntis(this.config.school, this.config.username, this.config.client_secret, this.config.baseUrl);
+
             untis.login().then(async () => {
                 this.log.debug('WebUntis Login erfolgreich')
                 // Now we can start
@@ -76,6 +83,7 @@ class Webuntis extends utils.Adapter {
 
     private readDataFromWebUntis(): void {
         const untis = new APIWebUntis(this.config.school, this.config.username, this.config.client_secret, this.config.baseUrl);
+
         untis.login().then(async () => {
             this.log.debug('WebUntis Login erfolgreich')
 
@@ -84,19 +92,26 @@ class Webuntis extends utils.Adapter {
                 if(timetable.length > 0) {
                     this.log.debug('Timetable gefunden')
 
-                    await this.setTimeTable(timetable);
+                    this.timetableDate = new Date(); //info timetbale is fro today
+                    await this.setTimeTable(timetable, 0);
                     await this.setStateAsync('info.connection', true, true);
 
                 } else {
                     //Not timetable found, search next workingday
                     this.log.info('No timetable Today, search next working day');
-                    untis.getOwnTimetableFor(this.getNextWorkDay(new Date())).then(async (timetable) => {
+                    this.timetableDate = this.getNextWorkDay(new Date());
+                    untis.getOwnTimetableFor(this.timetableDate).then(async (timetable) => {
                         this.log.debug('Timetable an anderen Tag gefunden')
 
-                        await this.setTimeTable(timetable);
+                        await this.setTimeTable(timetable, 0);
                         await this.setStateAsync('info.connection', true, true);
                     });
                 }
+                //Next day
+                this.timetableDate.setDate(this.timetableDate.getDate() + 1);
+                untis.getOwnTimetableFor(this.timetableDate).then(async (timetable) => {
+                    await this.setTimeTable(timetable, 1);
+                });
             });
         }).catch(async error => {
             this.log.error(error);
@@ -109,9 +124,30 @@ class Webuntis extends utils.Adapter {
     }
 
     //Function for Timetable
-    async setTimeTable(timetable: Lesson[]): Promise<void> {
+    async setTimeTable(timetable: Lesson[], dayindex: number): Promise<void> {
+
+
+        //Info from this date is the timetable
+        await this.setObjectNotExistsAsync(dayindex + '.timetable-date', {
+            type: 'state',
+            common: {
+                name: 'timetable-date',
+                role: 'value',
+                type: 'string',
+                write: false,
+                read: true,
+            },
+            native: {},
+        }).catch((error) => {
+            this.log.error(error);
+        });
+        await this.setStateAsync(dayindex + '.timetable-date', this.timetableDate.toString(), true);
+
 
         let index = 0;
+        let minTime = 2399;
+        let maxTime = 0;
+        let exceptions = false;
         timetable = timetable.sort((a,b) => a.startTime - b.startTime);
 
         this.log.debug(JSON.stringify(timetable));
@@ -121,12 +157,12 @@ class Webuntis extends utils.Adapter {
             this.log.debug(JSON.stringify(element));
 
             //create an Object for each elemnt on the day
-            await this.setObjectNotExistsAsync(index.toString() + '.startTime', {
+            await this.setObjectNotExistsAsync(dayindex + '.' + index.toString() + '.startTime', {
                 type: 'state',
                 common: {
                     name: 'startTime',
                     role: 'value',
-                    type: 'number',
+                    type: 'string',
                     write: false,
                     read: true,
                 },
@@ -134,14 +170,16 @@ class Webuntis extends utils.Adapter {
             }).catch((error) => {
                 this.log.error(error);
             });
-            await this.setStateAsync(index.toString() + '.startTime', element.startTime, true);
+            await this.setStateAsync(dayindex + '.' + index.toString() + '.startTime', APIWebUntis.convertUntisTime(element.startTime).toString(), true);
+            //save mintime
+            if (minTime > element.startTime) minTime = element.startTime;
 
-            await this.setObjectNotExistsAsync(index.toString() + '.endTime', {
+            await this.setObjectNotExistsAsync(dayindex + '.' + index.toString() + '.endTime', {
                 type: 'state',
                 common: {
                     name: 'endTime',
                     role: 'value',
-                    type: 'number',
+                    type: 'string',
                     write: false,
                     read: true,
                 },
@@ -149,9 +187,11 @@ class Webuntis extends utils.Adapter {
             }).catch((error) => {
                 this.log.error(error);
             });
-            await  this.setStateAsync(index.toString() + '.endTime', element.endTime, true);
+            await  this.setStateAsync(dayindex + '.' + index.toString() + '.endTime', APIWebUntis.convertUntisTime(element.endTime).toString(), true);
+            //save maxtime
+            if (maxTime < element.endTime) maxTime = element.endTime;
 
-            await this.setObjectNotExistsAsync(index.toString() + '.name', {
+            await this.setObjectNotExistsAsync(dayindex + '.' + index.toString() + '.name', {
                 type: 'state',
                 common: {
                     name: 'name',
@@ -164,9 +204,13 @@ class Webuntis extends utils.Adapter {
             }).catch((error) => {
                 this.log.error(error);
             });
-            await this.setStateAsync(index.toString() + '.name', element.su[0].name, true);
+            if(element.su && element.su.length > 0){
+                await this.setStateAsync(dayindex + '.' + index.toString() + '.name', element.su[0].name, true);
+            } else {
+                await this.setStateAsync(dayindex + '.' + index.toString() + '.name', null, true);
+            }
 
-            await this.setObjectNotExistsAsync(index.toString() + '.teacher', {
+            await this.setObjectNotExistsAsync(dayindex + '.' + index.toString() + '.teacher', {
                 type: 'state',
                 common: {
                     name: 'teacher',
@@ -179,9 +223,12 @@ class Webuntis extends utils.Adapter {
             }).catch((error) => {
                 this.log.error(error);
             });
-            await this.setStateAsync(index.toString() + '.teacher', element.te[0].longname, true);
-
-            await this.setObjectNotExistsAsync(index.toString() + '.room', {
+            if(element.te && element.te.length > 0) {
+                await this.setStateAsync(dayindex + '.' + index.toString() + '.teacher', element.te[0].longname, true);
+            } else {
+                await this.setStateAsync(dayindex + '.' + index.toString() + '.teacher', null, true);
+            }
+            await this.setObjectNotExistsAsync(dayindex + '.' + index.toString() + '.room', {
                 type: 'state',
                 common: {
                     name: 'room',
@@ -194,9 +241,83 @@ class Webuntis extends utils.Adapter {
             }).catch((error) => {
                 this.log.error(error);
             });
-            await this.setStateAsync(index.toString() + '.room', element.ro[0].name, true);
+            if(element.ro && element.ro.length > 0) {
+                await this.setStateAsync(dayindex + '.' + index.toString() + '.room', element.ro[0].name, true);
+            } else {
+                await this.setStateAsync(dayindex + '.' + index.toString() + '.room', null, true);
+            }
+
+            await this.setObjectNotExistsAsync(dayindex + '.' + index.toString() + '.code', {
+                type: 'state',
+                common: {
+                    name: 'code',
+                    role: 'value',
+                    type: 'string',
+                    write: false,
+                    read: true,
+                },
+                native: {},
+            }).catch((error) => {
+                this.log.error(error);
+            });
+            if(element.code == 'cancelled' ||  element.code == 'irregular') {
+                exceptions = true;
+                await this.setStateAsync(dayindex + '.' + index.toString() + '.code', element.code, true);
+            } else {
+                await this.setStateAsync(dayindex + '.' + index.toString() + '.code', 'regular', true);
+            }
+
             //Next Elemet
             index = index + 1;
+        }
+
+        if (index > 0) {
+            this.log.info('HABEN folgenden MIN TIME:' + minTime)
+            //we have min one element
+            await this.setObjectNotExistsAsync(dayindex + '.minTime', {
+                type: 'state',
+                common: {
+                    name: 'minTime',
+                    role: 'value',
+                    type: 'string',
+                    write: false,
+                    read: true,
+                },
+                native: {},
+            }).catch((error) => {
+                this.log.error(error);
+            });
+            await this.setStateAsync(dayindex + '.minTime', APIWebUntis.convertUntisTime(minTime).toString(), true);
+
+            await this.setObjectNotExistsAsync(dayindex + '.maxTime', {
+                type: 'state',
+                common: {
+                    name: 'maxTime',
+                    role: 'value',
+                    type: 'string',
+                    write: false,
+                    read: true,
+                },
+                native: {},
+            }).catch((error) => {
+                this.log.error(error);
+            });
+            await this.setStateAsync(dayindex + '.maxTime', APIWebUntis.convertUntisTime(maxTime).toString(), true);
+
+            await this.setObjectNotExistsAsync(dayindex + '.exceptions', {
+                type: 'state',
+                common: {
+                    name: 'maxTime',
+                    role: 'value',
+                    type: 'boolean',
+                    write: false,
+                    read: true,
+                },
+                native: {},
+            }).catch((error) => {
+                this.log.error(error);
+            });
+            await this.setStateAsync(dayindex + '.exceptions', exceptions, true);
         }
 
         //check if an Object is over the max index
