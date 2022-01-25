@@ -21,7 +21,7 @@ Adapter to get data from WebUntis
     ### **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+### 0.1.0 (2022-01-25)
 - Add nextDay
 - Add code element
 * (Newan) initial release
