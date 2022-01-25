@@ -25,7 +25,7 @@ Zur Vorbereitung, geht man in einem Webbrowser auf die Seite ![webuntis.com](htt
 Im Suchfeld auf der Seite gibt man den gewünschten Schulnamen ein.
 Daraufhin öffnet sich eine Webseite. In der Adresszeile des Browsers stehen nun die gewünschten Daten.
 
-![Alt text](readme/img/webuntis_start.png?raw=true "Title")
+![webuntis_start](readme/img/webuntis_start.png)
 
 
 Wir benötigen folgende Strings aus der Adresszeile
@@ -40,7 +40,7 @@ https://hepta.webuntis.com/WebUntis/?school=hbs-F%C3%BCrth#/basic/login
 
 Nun wechselt man in Iobroker-Konfigurationsfenster des Adapters
 
-![webuntis_config](readme/img/webuntis_config.png)
+![webuntis_config](img/webuntis_config.png)
 
 - Unter Username (Kind oder Elternteil) gibt man den Benutzernamen ein.
 - Unter Passwort, das Passwort des Users

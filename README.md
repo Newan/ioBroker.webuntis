@@ -14,13 +14,16 @@
 ## webuntis adapter for ioBroker
 
 Adapter to get data from WebUntis
-Dieser Adapter bezieht Daten aus Webuntis. Für eine deutsche Anleitung ![hier klicken](readme/readme.de.md)
+
+Dieser Adapter bezieht Daten aus Webuntis. 
+Für eine deutsche Anleitung ![hier klicken](readme/readme.de.md)
 
 
 ## Getting started
 After the install of the adapter in iobroker, automatically opens the Configuration-Window.
 
-Now go to webuntis.com and take the schoolname in the searchfield.
+Now go to https://webuntis.com and take the schoolname in the searchfield.
+
 ![webuntis_start](readme/img/webuntis_start.png)
 
 now you need to strings from the internet-adress of the schoolwebsite from webuntis:
@@ -29,8 +32,9 @@ now you need to strings from the internet-adress of the schoolwebsite from webun
 
 see the example below the previous screenshot:
 https://hepta.webuntis.com/WebUntis/?school=hbs-F%C3%BCrth#/basic/login
-        hepta.webuntis.com    => the schoolbase-URL
-                                            hbs-F%C3%BCrth   => the school-secret
+
+- hepta.webuntis.com    => the schoolbase-URL
+- hbs-F%C3%BCrth        => the school-secret
 
 now go to the configuration-window in iobroker
 
