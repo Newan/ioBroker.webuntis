@@ -54,8 +54,6 @@ class Webuntis extends utils.Adapter {
         }
         else {
             this.log.debug('Api login started');
-            this.log.debug(this.config.username);
-            this.log.debug(this.config.client_secret);
             // Test to login to WebUntis
             const untis = new webuntis_1.default(this.config.school, this.config.username, this.config.client_secret, this.config.baseUrl);
             untis.login().then(async () => {
@@ -95,13 +93,13 @@ class Webuntis extends utils.Adapter {
         const untis = new webuntis_1.default(this.config.school, this.config.username, this.config.client_secret, this.config.baseUrl);
         untis.login().then(async () => {
             this.log.debug('WebUntis Login erfolgreich');
+            await this.setStateAsync('info.connection', true, true);
             //Start the loop, we have an session
             untis.getOwnTimetableForToday().then(async (timetable) => {
                 if (timetable.length > 0) {
                     this.log.debug('Timetable gefunden');
                     this.timetableDate = new Date(); //info timetbale is fro today
                     await this.setTimeTable(timetable, 0);
-                    await this.setStateAsync('info.connection', true, true);
                 }
                 else {
                     //Not timetable found, search next workingday
@@ -110,13 +108,18 @@ class Webuntis extends utils.Adapter {
                     untis.getOwnTimetableFor(this.timetableDate).then(async (timetable) => {
                         this.log.debug('Timetable an anderen Tag gefunden');
                         await this.setTimeTable(timetable, 0);
-                        await this.setStateAsync('info.connection', true, true);
                     });
                 }
                 //Next day
                 this.timetableDate.setDate(this.timetableDate.getDate() + 1);
                 untis.getOwnTimetableFor(this.timetableDate).then(async (timetable) => {
                     await this.setTimeTable(timetable, 1);
+                });
+                //get Messages from Center
+                untis.getNewsWidget(new Date()).then((newsFeed) => {
+                    this.log.debug('Get news feed from API');
+                    this.log.debug(JSON.stringify(newsFeed));
+                    this.setNewsFeed(newsFeed);
                 });
             });
         }).catch(async (error) => {
@@ -126,6 +129,57 @@ class Webuntis extends utils.Adapter {
         });
         // Next round in one Hour
         this.startHourSchedule();
+    }
+    //Function for Newsfeed
+    async setNewsFeed(newsFeed) {
+        await this.setObjectNotExistsAsync('newsfeed.newsfeed-date', {
+            type: 'state',
+            common: {
+                name: 'newsfeed-date',
+                role: 'value',
+                type: 'string',
+                write: false,
+                read: true,
+            },
+            native: {},
+        }).catch((error) => {
+            this.log.error(error);
+        });
+        await this.setStateAsync('newsfeed.newsfeed-date', new Date().toString(), true);
+        let index = 0;
+        for (const feed of newsFeed.messagesOfDay) {
+            await this.setObjectNotExistsAsync('newsfeed.' + index + '.subject', {
+                type: 'state',
+                common: {
+                    name: 'subject',
+                    role: 'value',
+                    type: 'string',
+                    write: false,
+                    read: true,
+                },
+                native: {},
+            }).catch((error) => {
+                this.log.error(error);
+            });
+            await this.setStateAsync('newsfeed.' + index + '.subject', feed.subject, true);
+            await this.setObjectNotExistsAsync('newsfeed.' + index + '.text', {
+                type: 'state',
+                common: {
+                    name: 'text',
+                    role: 'value',
+                    type: 'string',
+                    write: false,
+                    read: true,
+                },
+                native: {},
+            }).catch((error) => {
+                this.log.error(error);
+            });
+            await this.setStateAsync('newsfeed.' + index + '.text', feed.text, true);
+            //Count Element
+            index = index + 1;
+        }
+        this.deleteOldNewsFeedObject(index);
     }
     //Function for Timetable
     async setTimeTable(timetable, dayindex) {
@@ -151,7 +205,7 @@ class Webuntis extends utils.Adapter {
         timetable = timetable.sort((a, b) => a.startTime - b.startTime);
         this.log.debug(JSON.stringify(timetable));
         for (const element of timetable) {
-            this.log.debug('Elemet gefunden für: ' + index.toString());
+            this.log.debug('Element found: ' + index.toString());
             this.log.debug(JSON.stringify(element));
             //create an Object for each elemnt on the day
             await this.setObjectNotExistsAsync(dayindex + '.' + index.toString() + '.startTime', {
@@ -269,7 +323,6 @@ class Webuntis extends utils.Adapter {
             index = index + 1;
         }
         if (index > 0) {
-            this.log.info('HABEN folgenden MIN TIME:' + minTime);
             //we have min one element
             await this.setObjectNotExistsAsync(dayindex + '.minTime', {
                 type: 'state',
@@ -315,17 +368,27 @@ class Webuntis extends utils.Adapter {
             await this.setStateAsync(dayindex + '.exceptions', exceptions, true);
         }
         //check if an Object is over the max index
-        await this.deleteOldObject(index);
+        await this.deleteOldTimetableObject(index);
     }
     //Helpfunction
-    async deleteOldObject(index) {
+    async deleteOldNewsFeedObject(index) {
+        index = index;
+        const delObject = await this.getObjectAsync('newsfeed.' + index + '.text');
+        if (delObject) {
+            this.log.debug('Object zum löschen gefunden - ' + index.toString());
+            await this.delObjectAsync(index.toString(), { recursive: true });
+            // Have one delted, next round
+            await this.deleteOldTimetableObject(index + 1);
+        }
+    }
+    async deleteOldTimetableObject(index) {
         index = index;
         const delObject = await this.getObjectAsync(index.toString() + '.name');
         if (delObject) {
             this.log.debug('Object zum löschen gefunden - ' + index.toString());
             await this.delObjectAsync(index.toString(), { recursive: true });
             // Have one delted, next round
-            await this.deleteOldObject(index + 1);
+            await this.deleteOldTimetableObject(index + 1);
         }
     }
     getNextWorkDay(date) {
