@@ -4,7 +4,6 @@
 [![NPM version](https://img.shields.io/npm/v/iobroker.webuntis.svg)](https://www.npmjs.com/package/iobroker.webuntis)
 [![Downloads](https://img.shields.io/npm/dm/iobroker.webuntis.svg)](https://www.npmjs.com/package/iobroker.webuntis)
 ![Number of Installations](https://iobroker.live/badges/webuntis-installed.svg)
-![Current version in stable repository](https://iobroker.live/badges/webuntis-stable.svg)
 
 
 [![NPM](https://nodei.co/npm/iobroker.webuntis.png?downloads=true)](https://nodei.co/npm/iobroker.webuntis/)
