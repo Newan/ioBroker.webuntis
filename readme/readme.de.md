@@ -14,12 +14,13 @@
 ## webuntis adapter for ioBroker
 
 
-Dieser Adapter bezieht Daten aus Webuntis. Für eine deutsche Anleitung 
+Dieser Adapter bezieht Daten aus Webuntis. Für eine deutsche Anleitung
+
 This Adapter get data from WebUntis. For english-tutorial ![click here](https://github.com/Newan/ioBroker.webuntis/readme.md)
 
 ## Konfiguration
 Nach der Installation des Adapters in Iobroker und dem erstellen einer Instanz, erscheint automatisch
-das Konfigurationsfesnter.
+das Konfigurationsfenster.
 
 Zur Vorbereitung, geht man in einem Webbrowser auf die Seite ![webuntis.com](https://webuntis.com)
 Im Suchfeld auf der Seite gibt man den gewünschten Schulnamen ein.
@@ -37,6 +38,8 @@ Im Beispiel-Screenshot sind dies folgende Daten als Beispiel:
 https://hepta.webuntis.com/WebUntis/?school=hbs-F%C3%BCrth#/basic/login
         hepta.webuntis.com    => the schoolbase-URL
                                             hbs-F%C3%BCrth   => the school-secret
+
+** Sollte im school-Sercet ein __+__ vorhanden sein. Muss dieses im folgenden Schritt durch ein Leerzeichen ersetzt werden**
 
 Nun wechselt man in Iobroker-Konfigurationsfenster des Adapters
 
