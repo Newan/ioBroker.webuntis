@@ -35,8 +35,9 @@ Wir benötigen folgende Strings aus der Adresszeile
 
 Im Beispiel-Screenshot sind dies folgende Daten als Beispiel:
 https://hepta.webuntis.com/WebUntis/?school=hbs-F%C3%BCrth#/basic/login
-        hepta.webuntis.com    => the schoolbase-URL
-                                            hbs-F%C3%BCrth   => the school-secret
+        
+- hepta.webuntis.com    => the schoolbase-URL
+- hbs-F%C3%BCrth        => the school-secret
 
 **Sollte im school-Sercet ein __+__ vorhanden sein. Muss dieses im folgenden Schritt durch ein Leerzeichen ersetzt werden**
 
