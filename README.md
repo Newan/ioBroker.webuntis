@@ -36,6 +36,8 @@ https://hepta.webuntis.com/WebUntis/?school=hbs-F%C3%BCrth#/basic/login
 - hepta.webuntis.com    => the schoolbase-URL
 - hbs-F%C3%BCrth        => the school-secret
 
+**If in school-secret is a __+__ , then you must replace this character with a blank space**
+
 now go to the configuration-window in iobroker
 
 ![webuntis_config](readme/img/webuntis_config.png)
