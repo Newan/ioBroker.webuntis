@@ -4,6 +4,8 @@
 declare global {
     namespace ioBroker {
         interface AdapterConfig {
+            anonymous: boolean;
+            class: string;
             username: string;
             client_secret: string;
             school: string;

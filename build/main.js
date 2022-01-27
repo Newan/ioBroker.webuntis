@@ -40,31 +40,76 @@ class Webuntis extends utils.Adapter {
         this.on('ready', this.onReady.bind(this));
         this.on('unload', this.onUnload.bind(this));
         this.timetableDate = new Date();
+        this.class_id = 0;
     }
     /**
      * Is called when databases are connected and adapter received configuration.
      */
     async onReady() {
-        // Testen ob der Login funktioniert
-        if (this.config.username == '') {
-            this.log.error('No username set');
+        if (this.config.baseUrl == '') {
+            this.log.error('No baseUrl set');
         }
-        else if (this.config.client_secret == '') {
-            this.log.error('No password set');
+        else if (this.config.school == '') {
+            this.log.error('No school set');
         }
         else {
-            this.log.debug('Api login started');
-            // Test to login to WebUntis
-            const untis = new webuntis_1.default(this.config.school, this.config.username, this.config.client_secret, this.config.baseUrl);
-            untis.login().then(async () => {
-                this.log.debug('WebUntis Login erfolgreich');
-                // Now we can start
-                this.readDataFromWebUntis();
-            }).catch(async (error) => {
-                this.log.error(error);
-                this.log.error('Login WebUntis failed');
-                await this.setStateAsync('info.connection', false, true);
-            });
+            if (this.config.anonymous) {
+                if (this.config.class == '') {
+                    this.log.error('No class set');
+                }
+                else {
+                    //Anonymous login startet
+                    const untis = new webuntis_1.default.WebUntisAnonymousAuth(this.config.school, this.config.baseUrl);
+                    untis.login().then(async () => {
+                        this.log.debug('Anonymous Login sucessfully');
+                        //search class id
+                        await untis.getClasses().then((classes) => {
+                            for (const objClass of classes) {
+                                if (objClass.name == this.config.class) {
+                                    this.log.debug('Class found with id:' + objClass.id);
+                                    this.class_id = objClass.id;
+                                }
+                            }
+                        }).catch(async (error) => {
+                            this.log.error(error);
+                            this.log.error('Login WebUntis failed');
+                            await this.setStateAsync('info.connection', false, true);
+                        });
+                        if (this.class_id > 0) {
+                            // Now we can start
+                            this.readDataFromWebUntis();
+                        }
+                        else {
+                            this.log.error('Class not found');
+                        }
+                    }).catch(err => {
+                        this.log.error(err);
+                    });
+                }
+            }
+            else {
+                // Testen ob der Login funktioniert
+                if (this.config.username == '') {
+                    this.log.error('No username set');
+                }
+                else if (this.config.client_secret == '') {
+                    this.log.error('No password set');
+                }
+                else {
+                    this.log.debug('Api login started');
+                    // Test to login to WebUntis
+                    const untis = new webuntis_1.default(this.config.school, this.config.username, this.config.client_secret, this.config.baseUrl);
+                    untis.login().then(async () => {
+                        this.log.debug('WebUntis Login erfolgreich');
+                        // Now we can start
+                        this.readDataFromWebUntis();
+                    }).catch(async (error) => {
+                        this.log.error(error);
+                        this.log.error('Login WebUntis failed');
+                        await this.setStateAsync('info.connection', false, true);
+                    });
+                }
+            }
         }
     }
     /**
@@ -90,30 +135,67 @@ class Webuntis extends utils.Adapter {
         }, this.getMillisecondsToNextFullHour());
     }
     readDataFromWebUntis() {
-        const untis = new webuntis_1.default(this.config.school, this.config.username, this.config.client_secret, this.config.baseUrl);
-        untis.login().then(async () => {
-            this.log.debug('WebUntis Login erfolgreich');
-            await this.setStateAsync('info.connection', true, true);
-            //Start the loop, we have an session
-            untis.getOwnTimetableForToday().then(async (timetable) => {
-                if (timetable.length > 0) {
-                    this.log.debug('Timetable gefunden');
-                    this.timetableDate = new Date(); //info timetbale is fro today
-                    await this.setTimeTable(timetable, 0);
-                }
-                else {
-                    //Not timetable found, search next workingday
-                    this.log.info('No timetable Today, search next working day');
-                    this.timetableDate = this.getNextWorkDay(new Date());
-                    untis.getOwnTimetableFor(this.timetableDate).then(async (timetable) => {
-                        this.log.debug('Timetable an anderen Tag gefunden');
+        if (this.config.anonymous) {
+            const untis = new webuntis_1.default.WebUntisAnonymousAuth(this.config.school, this.config.baseUrl);
+            untis.login().then(async () => {
+                this.log.debug('WebUntis Anonymous Login erfolgreich');
+                await this.setStateAsync('info.connection', true, true);
+                //Start the loop, we have an session
+                untis.getTimetableFor(new Date(), this.class_id, webuntis_1.default.TYPES.CLASS).then(async (timetable) => {
+                    // Now we can start
+                    //this.readDataFromWebUntis()
+                    if (timetable.length > 0) {
+                        this.log.debug('Timetable gefunden');
+                        this.timetableDate = new Date(); //info timetbale is fro today
                         await this.setTimeTable(timetable, 0);
+                    }
+                    else {
+                        //Not timetable found, search next workingday
+                        this.log.info('No timetable Today, search next working day');
+                        this.timetableDate = this.getNextWorkDay(new Date());
+                        untis.getTimetableFor(this.timetableDate, this.class_id, webuntis_1.default.TYPES.CLASS).then(async (timetable) => {
+                            this.log.debug('Timetable an anderen Tag gefunden');
+                            await this.setTimeTable(timetable, 0);
+                        });
+                    }
+                    //Next day
+                    this.timetableDate.setDate(this.timetableDate.getDate() + 1);
+                    untis.getTimetableFor(this.timetableDate, this.class_id, webuntis_1.default.TYPES.CLASS).then(async (timetable) => {
+                        await this.setTimeTable(timetable, 1);
                     });
-                }
-                //Next day
-                this.timetableDate.setDate(this.timetableDate.getDate() + 1);
-                untis.getOwnTimetableFor(this.timetableDate).then(async (timetable) => {
-                    await this.setTimeTable(timetable, 1);
+                });
+            }).catch(async (error) => {
+                this.log.error(error);
+                this.log.error('Login Anonymous WebUntis failed');
+                await this.setStateAsync('info.connection', false, true);
+            });
+        }
+        else {
+            const untis = new webuntis_1.default(this.config.school, this.config.username, this.config.client_secret, this.config.baseUrl);
+            untis.login().then(async () => {
+                this.log.debug('WebUntis Login erfolgreich');
+                await this.setStateAsync('info.connection', true, true);
+                //Start the loop, we have an session
+                untis.getOwnTimetableForToday().then(async (timetable) => {
+                    if (timetable.length > 0) {
+                        this.log.debug('Timetable gefunden');
+                        this.timetableDate = new Date(); //info timetbale is fro today
+                        await this.setTimeTable(timetable, 0);
+                    }
+                    else {
+                        //Not timetable found, search next workingday
+                        this.log.info('No timetable Today, search next working day');
+                        this.timetableDate = this.getNextWorkDay(new Date());
+                        untis.getOwnTimetableFor(this.timetableDate).then(async (timetable) => {
+                            this.log.debug('Timetable an anderen Tag gefunden');
+                            await this.setTimeTable(timetable, 0);
+                        });
+                    }
+                    //Next day
+                    this.timetableDate.setDate(this.timetableDate.getDate() + 1);
+                    untis.getOwnTimetableFor(this.timetableDate).then(async (timetable) => {
+                        await this.setTimeTable(timetable, 1);
+                    });
                 });
                 //get Messages from Center
                 untis.getNewsWidget(new Date()).then((newsFeed) => {
@@ -121,12 +203,12 @@ class Webuntis extends utils.Adapter {
                     this.log.debug(JSON.stringify(newsFeed));
                     this.setNewsFeed(newsFeed);
                 });
+            }).catch(async (error) => {
+                this.log.error(error);
+                this.log.error('Login WebUntis failed');
+                await this.setStateAsync('info.connection', false, true);
             });
-        }).catch(async (error) => {
-            this.log.error(error);
-            this.log.error('Login WebUntis failed');
-            await this.setStateAsync('info.connection', false, true);
-        });
+        }
         // Next round in one Hour
         this.startHourSchedule();
     }
