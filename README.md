@@ -53,7 +53,7 @@ please feel free, to make a proposal for recommend versions.
     ### **WORK IN PROGRESS**
 -->
 
-## **WORK IN PROGRESS**
+### **WORK IN PROGRESS**
 * Add anonymous login
 
 ### 0.1.0 (2022-01-25)
