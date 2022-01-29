@@ -5,7 +5,7 @@
 // The adapter-core module gives you access to the core ioBroker functions
 // you need to create an adapter
 import * as utils from '@iobroker/adapter-core';
-import APIWebUntis, { Inbox, Inboxmessage, Lesson, NewsWidget } from 'webuntis';
+import APIWebUntis, { Inbox, Lesson, NewsWidget } from 'webuntis';
 
 // Load your modules here, e.g.:
 // import * as fs from "fs";
