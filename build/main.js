@@ -203,6 +203,11 @@ class Webuntis extends utils.Adapter {
                     this.log.debug(JSON.stringify(newsFeed));
                     this.setNewsFeed(newsFeed);
                 });
+                untis.getInbox().then((messages) => {
+                    this.log.debug('Get inbox from API');
+                    this.log.debug(JSON.stringify(messages));
+                    this.setInbox(messages);
+                });
             }).catch(async (error) => {
                 this.log.error(error);
                 this.log.error('Login WebUntis failed');
@@ -211,6 +216,57 @@ class Webuntis extends utils.Adapter {
         }
         // Next round in one Hour
         this.startHourSchedule();
+    }
+    //FUnktion for Inbox Data
+    async setInbox(messages) {
+        await this.setObjectNotExistsAsync('inbox.inbox-date', {
+            type: 'state',
+            common: {
+                name: 'inbox-date',
+                role: 'value',
+                type: 'string',
+                write: false,
+                read: true,
+            },
+            native: {},
+        }).catch((error) => {
+            this.log.error(error);
+        });
+        await this.setStateAsync('inbox.inbox-date', new Date().toString(), true);
+        let index = 0;
+        for (const message of messages.incomingMessages) {
+            await this.setObjectNotExistsAsync('inbox.' + index + '.subject', {
+                type: 'state',
+                common: {
+                    name: 'subject',
+                    role: 'value',
+                    type: 'string',
+                    write: false,
+                    read: true,
+                },
+                native: {},
+            }).catch((error) => {
+                this.log.error(error);
+            });
+            await this.setStateAsync('inbox.' + index + '.subject', message.subject, true);
+            await this.setObjectNotExistsAsync('inbox.' + index + '.contentPreview', {
+                type: 'state',
+                common: {
+                    name: 'contentPreview',
+                    role: 'value',
+                    type: 'string',
+                    write: false,
+                    read: true,
+                },
+                native: {},
+            }).catch((error) => {
+                this.log.error(error);
+            });
+            await this.setStateAsync('inbox.' + index + '.contentPreview', message.contentPreview, true);
+            //Count Element
+            index = index + 1;
+        }
+        this.deleteOldInboxObject(index);
     }
     //Function for Newsfeed
     async setNewsFeed(newsFeed) {
@@ -453,6 +509,16 @@ class Webuntis extends utils.Adapter {
         await this.deleteOldTimetableObject(index);
     }
     //Helpfunction
+    async deleteOldInboxObject(index) {
+        index = index;
+        const delObject = await this.getObjectAsync('inbox.' + index + '.subject');
+        if (delObject) {
+            this.log.debug('Object zum löschen gefunden - ' + index.toString());
+            await this.delObjectAsync(index.toString(), { recursive: true });
+            // Have one delted, next round
+            await this.deleteOldTimetableObject(index + 1);
+        }
+    }
     async deleteOldNewsFeedObject(index) {
         index = index;
         const delObject = await this.getObjectAsync('newsfeed.' + index + '.text');

@@ -5,7 +5,7 @@
 // The adapter-core module gives you access to the core ioBroker functions
 // you need to create an adapter
 import * as utils from '@iobroker/adapter-core';
-import APIWebUntis, { Lesson, NewsWidget } from 'webuntis';
+import APIWebUntis, { Inbox, Inboxmessage, Lesson, NewsWidget } from 'webuntis';
 
 // Load your modules here, e.g.:
 // import * as fs from "fs";
@@ -196,6 +196,12 @@ class Webuntis extends utils.Adapter {
                     this.setNewsFeed(newsFeed);
                 })
 
+                untis.getInbox().then( (messages) => {
+                    this.log.debug('Get inbox from API');
+                    this.log.debug(JSON.stringify(messages));
+                    this.setInbox(messages);
+                });
+
             }).catch(async error => {
                 this.log.error(error);
                 this.log.error('Login WebUntis failed');
@@ -204,6 +210,61 @@ class Webuntis extends utils.Adapter {
         }
         // Next round in one Hour
         this.startHourSchedule()
+    }
+
+    //FUnktion for Inbox Data
+    async setInbox(messages: Inbox): Promise<void> {
+        await this.setObjectNotExistsAsync('inbox.inbox-date', {
+            type: 'state',
+            common: {
+                name: 'inbox-date',
+                role: 'value',
+                type: 'string',
+                write: false,
+                read: true,
+            },
+            native: {},
+        }).catch((error) => {
+            this.log.error(error);
+        });
+        await this.setStateAsync('inbox.inbox-date', new Date().toString(), true);
+
+        let index = 0;
+        for(const message of messages.incomingMessages) {
+            await this.setObjectNotExistsAsync('inbox.' + index + '.subject', {
+                type: 'state',
+                common: {
+                    name: 'subject',
+                    role: 'value',
+                    type: 'string',
+                    write: false,
+                    read: true,
+                },
+                native: {},
+            }).catch((error) => {
+                this.log.error(error);
+            });
+            await this.setStateAsync('inbox.' + index + '.subject', message.subject, true);
+
+            await this.setObjectNotExistsAsync('inbox.' + index + '.contentPreview', {
+                type: 'state',
+                common: {
+                    name: 'contentPreview',
+                    role: 'value',
+                    type: 'string',
+                    write: false,
+                    read: true,
+                },
+                native: {},
+            }).catch((error) => {
+                this.log.error(error);
+            });
+            await this.setStateAsync('inbox.' + index + '.contentPreview', message.contentPreview, true);
+
+            //Count Element
+            index = index + 1;
+        }
+        this.deleteOldInboxObject(index);
     }
 
     //Function for Newsfeed
@@ -461,6 +522,18 @@ class Webuntis extends utils.Adapter {
 
 
     //Helpfunction
+    private async deleteOldInboxObject(index: number): Promise<void> {
+        index = index
+        const delObject = await this.getObjectAsync('inbox.' + index + '.subject')
+
+        if (delObject) {
+            this.log.debug('Object zum löschen gefunden - '  + index.toString());
+            await this.delObjectAsync(index.toString(), {recursive:true});
+            // Have one delted, next round
+            await this.deleteOldTimetableObject(index+1);
+        }
+    }
+
     private async deleteOldNewsFeedObject(index: number): Promise<void> {
         index = index
         const delObject = await this.getObjectAsync('newsfeed.' + index + '.text')
