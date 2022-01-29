@@ -55,6 +55,9 @@ please feel free, to make a proposal for recommend versions.
     ### **WORK IN PROGRESS**
 -->
 
+### **WORK IN PROGRESS**
+* Add Inbox peview data
+
 ### 0.2.0 (2022-01-27)
 * Add anonymous login
 
