@@ -1,8 +1,20 @@
 {
     "common": {
         "name": "webuntis",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "news": {
+            "0.3.0": {
+                "en": "Add Inbox peview data",
+                "de": "Ansichtsdaten des Posteingangs hinzufügen",
+                "ru": "Добавить данные просмотра папки \"Входящие\"",
+                "pt": "Adicionar dados de visualização da Caixa de entrada",
+                "nl": "Peview-gegevens van Postvak IN toevoegen",
+                "fr": "Ajouter des données d'aperçu de la boîte de réception",
+                "it": "Aggiungi i dati di visualizzazione della Posta in arrivo",
+                "es": "Agregar datos de revisión de bandeja de entrada",
+                "pl": "Dodaj dane podglądu skrzynki odbiorczej",
+                "zh-cn": "添加收件箱查看数据"
+            },
             "0.2.0": {
                 "en": "Add anonymous login",
                 "de": "Anonyme Anmeldung hinzufügen",

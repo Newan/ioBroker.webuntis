@@ -55,7 +55,7 @@ please feel free, to make a proposal for recommend versions.
     ### **WORK IN PROGRESS**
 -->
 
-### **WORK IN PROGRESS**
+### 0.3.0 (2022-01-29)
 * Add Inbox peview data
 
 ### 0.2.0 (2022-01-27)
