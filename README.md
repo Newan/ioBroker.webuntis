@@ -54,6 +54,8 @@ please feel free, to make a proposal for recommend versions.
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+* Bug fixes in timetable
 
 ### 0.3.0 (2022-01-29)
 * Add Inbox peview data
