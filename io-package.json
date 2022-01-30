@@ -1,8 +1,20 @@
 {
     "common": {
         "name": "webuntis",
-        "version": "0.3.0",
+        "version": "0.3.1",
         "news": {
+            "0.3.1": {
+                "en": "Bug fixes in timetable",
+                "de": "Fehlerbehebungen im Stundenplan",
+                "ru": "Исправлены ошибки в расписании",
+                "pt": "Correções de bugs no cronograma",
+                "nl": "Bugfixes in tijdschema",
+                "fr": "Corrections de bugs dans le calendrier",
+                "it": "Correzioni di bug nell'orario",
+                "es": "Corrección de errores en el calendario",
+                "pl": "Poprawki błędów w harmonogramie",
+                "zh-cn": "时间表中的错误修复"
+            },
             "0.3.0": {
                 "en": "Add Inbox peview data",
                 "de": "Ansichtsdaten des Posteingangs hinzufügen",
