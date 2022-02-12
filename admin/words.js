@@ -15,7 +15,16 @@ systemDictionary = {
         'zh-cn': 'webuntis的适配器设置'
     },
     'anonymous': {
-        'en': 'anonymous'
+        "en": "anonymous",
+        "de": "anonym",
+        "ru": "анонимный",
+        "pt": "anônimo",
+        "nl": "anoniem",
+        "fr": "anonyme",
+        "it": "anonimo",
+        "es": "anónimo",
+        "pl": "anonimowy",
+        "zh-cn": "匿名的"
     },
     'option2': {
         'en': 'option2',
