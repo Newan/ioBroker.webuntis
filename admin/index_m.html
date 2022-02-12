@@ -54,6 +54,41 @@
             onChange(false);
             // reinitialize all the Materialize labels on the page if you are dynamically adding inputs:
             if (M) M.updateTextFields();
+
+            $(".controller-checkbox").change(function() {
+                if ( $(this).prop("checked") == true ) {
+                    $(".change-visibility").each(function() {
+                        $(this).hide();
+                    });
+                    $(".change-anonym-visibility").each(function() {
+                        $(this).show();
+                    });
+                } else {
+                    $(".change-visibility").each(function() {
+                        $(this).show();
+                    });
+                    $(".change-anonym-visibility").each(function() {
+                        $(this).hide();
+                    });
+                }
+            });
+
+            if($(".controller-checkbox").prop("checked")){
+                $(".change-visibility").each(function() {
+                    $(this).hide();
+                });
+                $(".change-anonym-visibility").each(function() {
+                    $(this).show();
+                });
+            } else {
+                $(".change-visibility").each(function() {
+                    $(this).show();
+                });
+                $(".change-anonym-visibility").each(function() {
+                    $(this).hide();
+                });
+            }
+
         }
 
         // This will be called by the admin adapter when the user presses the save button
@@ -130,23 +165,23 @@
 		</div>
 		<div class="row">
 			<div class="col s6 input-field">
-                <input type="checkbox" class="value" id="anonymous" />
+                <input type="checkbox" class="value controller-checkbox" id="anonymous" />
                 <label for="anonymous" class="translate">Anonymous</label>
             </div>
 
-            <div class="col s6 input-field">
+            <div class="col s6 input-field change-anonym-visibility">
                 <input type="text" class="value" id="class" />
                 <label for="class" class="translate">Class name</label>
             </div>
 		</div>
 
         <div class="row">
-			<div class="col s6 input-field">
-                <input type="text" class="value" id="username" />
+			<div class="col s6 input-field change-visibility">
+                <input type="text" class="value " id="username" />
                 <label for="username" class="translate">Username</label>
             </div>
 
-            <div class="col s6 input-field">
+            <div class="col s6 input-field change-visibility">
                 <input type="password" class="value" id="client_secret" />
                 <label for="client_secret" class="translate">Password</label>
             </div>
