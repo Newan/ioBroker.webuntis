@@ -123,8 +123,22 @@
         "school": "",
         "baseUrl": ""
     },
+    "protectedNative": [
+        "client_secret"
+      ],
+      "encryptedNative": [
+        "client_secret"
+      ],    
     "objects": [],
     "instanceObjects": [
+        {
+            "_id": "info",
+            "type": "channel",
+            "common": {
+                "name": "Information"
+            },
+            "native": {}
+        },         
         {
             "_id": "info.connection",
             "type": "state",
