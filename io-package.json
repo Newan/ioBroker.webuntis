@@ -1,8 +1,20 @@
 {
     "common": {
         "name": "webuntis",
-        "version": "0.3.1",
+        "version": "0.3.2",
         "news": {
+            "0.3.2": {
+                "en": "Add errohandling for inbox & mesage center",
+                "de": "Fehlerbehandlung für Posteingang und Nachrichtencenter hinzufügen",
+                "ru": "Добавить обработку ошибок для папки \"Входящие\" и центра сообщений",
+                "pt": "Adicionar tratamento de erros para caixa de entrada e centro de mensagens",
+                "nl": "Foutafhandeling toevoegen voor inbox en berichtencentrum",
+                "fr": "Ajouter la gestion des erreurs pour la boîte de réception et le centre de messagerie",
+                "it": "Aggiungi la gestione degli errori per la posta in arrivo e il centro messaggi",
+                "es": "Agregar manejo de errores para la bandeja de entrada y el centro de mensajes",
+                "pl": "Dodaj obsługę błędów dla skrzynki odbiorczej i centrum wiadomości",
+                "zh-cn": "为收件箱和消息中心添加错误处理"
+            },
             "0.3.1": {
                 "en": "Bug fixes in timetable",
                 "de": "Fehlerbehebungen im Stundenplan",
@@ -116,9 +128,9 @@
         ],
         "globalDependencies": [
             {
-              "admin": ">=4.0.9"
+                "admin": ">=4.0.9"
             }
-        ]        
+        ]
     },
     "native": {
         "anonymous": true,
@@ -130,10 +142,10 @@
     },
     "protectedNative": [
         "client_secret"
-      ],
-      "encryptedNative": [
+    ],
+    "encryptedNative": [
         "client_secret"
-      ],    
+    ],
     "objects": [],
     "instanceObjects": [
         {
@@ -143,7 +155,7 @@
                 "name": "Information"
             },
             "native": {}
-        },         
+        },
         {
             "_id": "info.connection",
             "type": "state",
