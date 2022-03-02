@@ -191,17 +191,24 @@ class Webuntis extends utils.Adapter {
                     });
                 });
 
+                this.log.debug('Load Message center');
                 //get Messages from Center
                 untis.getNewsWidget(new Date()).then( (newsFeed) => {
                     this.log.debug('Get news feed from API');
                     this.log.debug(JSON.stringify(newsFeed));
                     this.setNewsFeed(newsFeed);
-                })
+                }).catch(async error => {
+                    this.log.error('Cannot read Message Center - possible block by scool');
+                    this.log.debug(error);
+                });
 
                 untis.getInbox().then( (messages) => {
                     this.log.debug('Get inbox from API');
                     this.log.debug(JSON.stringify(messages));
                     this.setInbox(messages);
+                }).catch(async error => {
+                    this.log.error('Cannot read Inbox - possible block by scool');
+                    this.log.debug(error);
                 });
 
             }).catch(async error => {
