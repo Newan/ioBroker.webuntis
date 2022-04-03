@@ -1,6 +1,6 @@
 {
   "name": "iobroker.webuntis",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Adapter to get data from WebUntis",
   "author": {
     "name": "Newan",

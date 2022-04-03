@@ -54,7 +54,7 @@ please feel free, to make a proposal for recommend versions.
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 0.3.3 (2022-04-03)
 * Add errorhandling for timetable
 
 ### 0.3.2 (2022-03-02)

@@ -1,8 +1,20 @@
 {
     "common": {
         "name": "webuntis",
-        "version": "0.3.2",
+        "version": "0.3.3",
         "news": {
+            "0.3.3": {
+                "en": "Add errorhandling for timetable",
+                "de": "Fehlerbehandlung für Stundenplan hinzufügen",
+                "ru": "Добавить обработку ошибок для расписания",
+                "pt": "Adicionar tratamento de erros para cronograma",
+                "nl": "Foutafhandeling voor dienstregeling toevoegen",
+                "fr": "Ajouter la gestion des erreurs pour le calendrier",
+                "it": "Aggiungi la gestione degli errori per l'orario",
+                "es": "Agregar manejo de errores para el horario",
+                "pl": "Dodaj obsługę błędów do harmonogramu",
+                "zh-cn": "为时间表添加错误处理"
+            },
             "0.3.2": {
                 "en": "Add errorhandling for inbox & mesage center",
                 "de": "Fehlerbehandlung für Posteingang und Nachrichtencenter hinzufügen",
