@@ -54,8 +54,11 @@ please feel free, to make a proposal for recommend versions.
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+* Add errorhandling for timetable
+
 ### 0.3.2 (2022-03-02)
-* Add errohandling for inbox & mesage center
+* Add errorhandling for inbox & mesage center
 
 ### 0.3.1 (2022-01-30)
 * Bug fixes in timetable

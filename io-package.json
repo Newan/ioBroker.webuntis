@@ -4,7 +4,7 @@
         "version": "0.3.2",
         "news": {
             "0.3.2": {
-                "en": "Add errohandling for inbox & mesage center",
+                "en": "Add errorhandling for inbox & mesage center",
                 "de": "Fehlerbehandlung für Posteingang und Nachrichtencenter hinzufügen",
                 "ru": "Добавить обработку ошибок для папки \"Входящие\" и центра сообщений",
                 "pt": "Adicionar tratamento de erros para caixa de entrada e centro de mensagens",

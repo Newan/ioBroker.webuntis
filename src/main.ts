@@ -129,6 +129,7 @@ class Webuntis extends utils.Adapter {
                 await this.setStateAsync('info.connection', true, true);
 
                 //Start the loop, we have an session
+                this.log.debug('Lese Timetable 0');
                 untis.getTimetableFor(new Date(), this.class_id, APIWebUntis.TYPES.CLASS).then( async (timetable) => {
                     // Now we can start
                     //this.readDataFromWebUntis()
@@ -145,12 +146,19 @@ class Webuntis extends utils.Adapter {
                         await untis.getTimetableFor(this.timetableDate, this.class_id, APIWebUntis.TYPES.CLASS).then(async (timetable) => {
                             this.log.info('Timetable found on next workind day')
                             await this.setTimeTable(timetable, 0);
+                        }).catch(async error => {
+                            this.log.error('Cannot read Timetable data from 0 - possible block by scool');
+                            this.log.debug(error);
                         });
                     }
                     //Next day
+                    this.log.debug('Lese Timetable +1');
                     this.timetableDate.setDate(this.timetableDate.getDate() + 1);
                     untis.getTimetableFor(this.timetableDate, this.class_id, APIWebUntis.TYPES.CLASS).then(async (timetable) => {
                         await this.setTimeTable(timetable, 1);
+                    }).catch(async error => {
+                        this.log.error('Cannot read Timetable data from +1 - possible block by scool');
+                        this.log.debug(error);
                     });
                 })
             }).catch(async error => {
@@ -166,13 +174,14 @@ class Webuntis extends utils.Adapter {
             untis.login().then(async () => {
                 this.log.debug('WebUntis Login erfolgreich')
                 await this.setStateAsync('info.connection', true, true);
+                this.timetableDate = new Date(); //info timetbale is for today
 
                 //Start the loop, we have an session
-                untis.getOwnTimetableForToday().then(async (timetable) => {
+                this.log.debug('Lese Timetable 0');
+                untis.getOwnTimetableFor(this.timetableDate).then(async (timetable) => {
                     if(timetable.length > 0) {
                         this.log.debug('Timetable gefunden')
 
-                        this.timetableDate = new Date(); //info timetbale is fro today
                         await this.setTimeTable(timetable, 0);
 
                     } else {
@@ -182,13 +191,23 @@ class Webuntis extends utils.Adapter {
                         await untis.getOwnTimetableFor(this.timetableDate).then(async (timetable) => {
                             this.log.info('Timetable found on next workind day');
                             await this.setTimeTable(timetable, 0);
+                        }).catch(async error => {
+                            this.log.error('Cannot read Timetable data from 0 - possible block by scool');
+                            this.log.debug(error);
                         });
                     }
                     //Next day
+                    this.log.debug('Lese Timetable +1');
                     this.timetableDate.setDate(this.timetableDate.getDate() + 1);
                     untis.getOwnTimetableFor(this.timetableDate).then(async (timetable) => {
                         await this.setTimeTable(timetable, 1);
+                    }).catch(async error => {
+                        this.log.error('Cannot read Timetable data from +1 - possible block by scool');
+                        this.log.debug(error);
                     });
+                }).catch(async error => {
+                    this.log.error('Cannot read Timetable for today - possible block by scool');
+                    this.log.debug(error);
                 });
 
                 this.log.debug('Load Message center');
