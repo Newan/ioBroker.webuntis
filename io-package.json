@@ -1,8 +1,20 @@
 {
     "common": {
         "name": "webuntis",
-        "version": "0.3.3",
+        "version": "0.3.4",
         "news": {
+            "0.3.4": {
+                "en": "change log-level for error messages",
+                "de": "Log-Level für Fehlermeldungen ändern",
+                "ru": "изменить уровень журнала для сообщений об ошибках",
+                "pt": "alterar o nível de log para mensagens de erro",
+                "nl": "log-niveau wijzigen voor foutmeldingen",
+                "fr": "modifier le niveau de journalisation des messages d'erreur",
+                "it": "modificare il livello di registro per i messaggi di errore",
+                "es": "cambiar el nivel de registro para mensajes de error",
+                "pl": "zmień poziom dziennika dla komunikatów o błędach",
+                "zh-cn": "更改错误消息的日志级别"
+            },
             "0.3.3": {
                 "en": "Add errorhandling for timetable",
                 "de": "Fehlerbehandlung für Stundenplan hinzufügen",

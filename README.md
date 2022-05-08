@@ -55,7 +55,7 @@ please feel free, to make a proposal for recommend versions.
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
-### **WORK IN PROGRESS**
+### 0.3.4 (2022-05-08)
 * change log-level for error messages
 
 ### 0.3.3 (2022-04-03)
