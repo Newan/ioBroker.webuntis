@@ -217,7 +217,7 @@ class Webuntis extends utils.Adapter {
                     this.log.debug(JSON.stringify(newsFeed));
                     this.setNewsFeed(newsFeed);
                 }).catch(async error => {
-                    this.log.error('Cannot read Message Center - possible block by scool');
+                    this.log.info('Cannot read Message Center - possible block by scool');
                     this.log.debug(error);
                 });
 
@@ -226,7 +226,7 @@ class Webuntis extends utils.Adapter {
                     this.log.debug(JSON.stringify(messages));
                     this.setInbox(messages);
                 }).catch(async error => {
-                    this.log.error('Cannot read Inbox - possible block by scool');
+                    this.log.info('Cannot read Inbox - possible block by scool');
                     this.log.debug(error);
                 });
 
