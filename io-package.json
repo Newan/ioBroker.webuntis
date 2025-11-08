@@ -139,6 +139,7 @@
         "extIcon": "https://raw.githubusercontent.com/Newan/ioBroker.webuntis/main/admin/webuntis.png",
         "readme": "https://github.com/Newan/ioBroker.webuntis/blob/main/README.md",
         "loglevel": "info",
+        "tier": 2,
         "mode": "daemon",
         "type": "date-and-time",
         "compact": true,
