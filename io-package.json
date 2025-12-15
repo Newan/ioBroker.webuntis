@@ -133,7 +133,6 @@
         ],
         "license": "MIT",
         "platform": "Javascript/Node.js",
-        "main": "build/main.js",
         "icon": "webuntis.png",
         "enabled": true,
         "extIcon": "https://raw.githubusercontent.com/Newan/ioBroker.webuntis/main/admin/webuntis.png",
