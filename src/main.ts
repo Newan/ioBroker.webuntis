@@ -8,7 +8,7 @@ import * as utils from '@iobroker/adapter-core';
 import APIWebUntis, { Inbox, Lesson, NewsWidget } from 'webuntis';
 
 // Load your modules here, e.g.:
-// import * as fs from "fs";
+// import * as fs from "node:fs";
 
 class Webuntis extends utils.Adapter {
 
