@@ -80,6 +80,8 @@ please feel free, to make a proposal for recommend versions.
 ### 0.0.1 (2022-01-25)
 * (Newan) initial release
 
+[Older changelogs can be found there](CHANGELOG_OLD.md)
+
 ## License
 MIT License
 
