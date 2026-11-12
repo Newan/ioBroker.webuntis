@@ -225,6 +225,9 @@ class Webuntis extends utils.Adapter {
         let exceptions = false;
 
         timetable = timetable.sort((a, b) => a.startTime - b.startTime);
+        // Kürzel → Langname aller Lehrer des Tages (für "Vertretung: X statt Y")
+        const lehrerLang = {};
+        for (const e of timetable) for (const t of (e.te || [])) if (t.name && t.longname) lehrerLang[t.name] = t.longname;
 
         for (const element of timetable) {
             const lessonPath = `${dayindex}.${index}`;
@@ -257,6 +260,15 @@ class Webuntis extends utils.Adapter {
             if (typeof element.info === 'string') infoText = element.info;
             else if (element.info && element.info.text) infoText = element.info.text;
             
+            // Vertretung/Raumwechsel: WebUntis setzt dafür keinen code, sondern liefert den ursprünglichen Lehrer/Raum als orgname
+            const lehrerWechsel = (element.te || []).filter(t => t.orgname && t.orgname !== t.name);
+            const raumWechsel = (element.ro || []).filter(r => r.orgname && r.orgname !== r.name);
+            const wechsel = [
+                ...lehrerWechsel.map(t => `Vertretung ${t.longname || t.name} statt ${lehrerLang[t.orgname] || t.orgname}`),
+                ...raumWechsel.map(r => `Raum ${r.name} statt ${r.orgname}`),
+            ].join(', ');
+            if (wechsel) infoText = infoText ? `${infoText} | ${wechsel}` : wechsel;
+
             if (element.substText) {
                 infoText = infoText ? `${infoText} | Vertretung: ${element.substText}` : element.substText;
             }
@@ -267,6 +279,9 @@ class Webuntis extends utils.Adapter {
             if (element.code && changeCodes.includes(element.code)) {
                 exceptions = true;
                 await this.createAndSetState(lessonPath + '.code', element.code);
+            } else if (element.code !== 'cancelled' && (lehrerWechsel.length || raumWechsel.length)) {
+                exceptions = true;
+                await this.createAndSetState(lessonPath + '.code', lehrerWechsel.length ? 'substitution' : 'roomchange');
             } else {
                 await this.createAndSetState(lessonPath + '.code', 'regular');
             }
