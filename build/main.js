@@ -25,12 +25,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// The adapter-core module gives you access to the core ioBroker functions
-// you need to create an adapter
+
 const utils = __importStar(require("@iobroker/adapter-core"));
 const webuntis_1 = __importDefault(require("webuntis"));
-// Load your modules here, e.g.:
-// import * as fs from "fs";
+
 class Webuntis extends utils.Adapter {
     constructor(options = {}) {
         super({
@@ -42,27 +40,20 @@ class Webuntis extends utils.Adapter {
         this.timetableDate = new Date();
         this.class_id = 0;
     }
-    /**
-     * Is called when databases are connected and adapter received configuration.
-     */
+
     async onReady() {
         if (this.config.baseUrl == '') {
             this.log.error('No baseUrl set');
-        }
-        else if (this.config.school == '') {
+        } else if (this.config.school == '') {
             this.log.error('No school set');
-        }
-        else {
+        } else {
             if (this.config.anonymous) {
                 if (this.config.class == '') {
                     this.log.error('No class set');
-                }
-                else {
-                    //Anonymous login startet
+                } else {
                     const untis = new webuntis_1.default.WebUntisAnonymousAuth(this.config.school, this.config.baseUrl);
                     untis.login().then(async () => {
-                        this.log.debug('Anonymous Login sucessfully');
-                        //search class id
+                        this.log.debug('Anonymous Login successfully');
                         await untis.getClasses().then((classes) => {
                             for (const objClass of classes) {
                                 if (objClass.name == this.config.class) {
@@ -76,32 +67,24 @@ class Webuntis extends utils.Adapter {
                             await this.setStateAsync('info.connection', false, true);
                         });
                         if (this.class_id > 0) {
-                            // Now we can start
                             this.readDataFromWebUntis();
-                        }
-                        else {
+                        } else {
                             this.log.error('Class not found');
                         }
                     }).catch(err => {
                         this.log.error(err);
                     });
                 }
-            }
-            else {
-                // Testen ob der Login funktioniert
+            } else {
                 if (this.config.username == '') {
                     this.log.error('No username set');
-                }
-                else if (this.config.client_secret == '') {
+                } else if (this.config.client_secret == '') {
                     this.log.error('No password set');
-                }
-                else {
+                } else {
                     this.log.debug('Api login started');
-                    // Test to login to WebUntis
                     const untis = new webuntis_1.default(this.config.school, this.config.username, this.config.client_secret, this.config.baseUrl);
                     untis.login().then(async () => {
                         this.log.debug('WebUntis Login erfolgreich');
-                        // Now we can start
                         this.readDataFromWebUntis();
                     }).catch(async (error) => {
                         this.log.error(error);
@@ -112,18 +95,16 @@ class Webuntis extends utils.Adapter {
             }
         }
     }
-    /**
-     * Is called when adapter shuts down - callback has to be called under any circumstances!
-     */
+
     onUnload(callback) {
         try {
-            callback();
             this.clearTimeout(this.startHourScheduleTimeout);
-        }
-        catch (e) {
+            callback();
+        } catch (e) {
             callback();
         }
     }
+
     startHourSchedule() {
         if (this.startHourScheduleTimeout) {
             this.log.debug('clearing old refresh timeout');
@@ -135,456 +116,243 @@ class Webuntis extends utils.Adapter {
             this.readDataFromWebUntis();
         }, this.getMillisecondsToNextFullHour());
     }
+
     readDataFromWebUntis() {
         if (this.config.anonymous) {
             const untis = new webuntis_1.default.WebUntisAnonymousAuth(this.config.school, this.config.baseUrl);
             untis.login().then(async () => {
                 this.log.debug('WebUntis Anonymous Login erfolgreich');
                 await this.setStateAsync('info.connection', true, true);
-                //Start the loop, we have an session
                 this.log.debug('Lese Timetable 0');
                 untis.getTimetableFor(new Date(), this.class_id, webuntis_1.default.TYPES.CLASS).then(async (timetable) => {
-                    // Now we can start
-                    //this.readDataFromWebUntis()
                     if (timetable.length > 0) {
                         this.log.debug('Timetable gefunden');
-                        this.timetableDate = new Date(); //info timetbale is fro today
+                        this.timetableDate = new Date();
                         await this.setTimeTable(timetable, 0);
-                    }
-                    else {
-                        //Not timetable found, search next workingday
+                    } else {
                         this.log.info('No timetable Today, search next working day');
                         this.timetableDate = this.getNextWorkDay(new Date());
                         await untis.getTimetableFor(this.timetableDate, this.class_id, webuntis_1.default.TYPES.CLASS).then(async (timetable) => {
-                            this.log.info('Timetable found on next workind day');
+                            this.log.info('Timetable found on next working day');
                             await this.setTimeTable(timetable, 0);
                         }).catch(async (error) => {
-                            this.log.error('Cannot read Timetable data from 0 - possible block by scool');
+                            this.log.error('Cannot read Timetable data from 0');
                             this.log.debug(error);
                         });
                     }
-                    //Next day
                     this.log.debug('Lese Timetable +1');
-                    this.timetableDate.setDate(this.timetableDate.getDate() + 1);
-                    untis.getTimetableFor(this.timetableDate, this.class_id, webuntis_1.default.TYPES.CLASS).then(async (timetable) => {
+                    const nextDay = new Date(this.timetableDate);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    untis.getTimetableFor(nextDay, this.class_id, webuntis_1.default.TYPES.CLASS).then(async (timetable) => {
                         await this.setTimeTable(timetable, 1);
                     }).catch(async (error) => {
-                        this.log.error('Cannot read Timetable data from +1 - possible block by scool');
+                        this.log.error('Cannot read Timetable data from +1');
                         this.log.debug(error);
                     });
                 });
             }).catch(async (error) => {
                 this.log.error(error);
-                this.log.error('Login Anonymous WebUntis failed');
                 await this.setStateAsync('info.connection', false, true);
             });
-        }
-        else {
+        } else {
             const untis = new webuntis_1.default(this.config.school, this.config.username, this.config.client_secret, this.config.baseUrl);
             untis.login().then(async () => {
                 this.log.debug('WebUntis Login erfolgreich');
                 await this.setStateAsync('info.connection', true, true);
-                this.timetableDate = new Date(); //info timetbale is for today
-                //Start the loop, we have an session
-                this.log.debug('Lese Timetable 0');
+                this.timetableDate = new Date();
                 untis.getOwnTimetableFor(this.timetableDate).then(async (timetable) => {
                     if (timetable.length > 0) {
-                        this.log.debug('Timetable gefunden');
                         await this.setTimeTable(timetable, 0);
-                    }
-                    else {
-                        //Not timetable found, search next workingday
-                        this.log.info('No timetable Today, search next working day');
+                    } else {
                         this.timetableDate = this.getNextWorkDay(new Date());
                         await untis.getOwnTimetableFor(this.timetableDate).then(async (timetable) => {
-                            this.log.info('Timetable found on next workind day');
                             await this.setTimeTable(timetable, 0);
-                        }).catch(async (error) => {
-                            this.log.error('Cannot read Timetable data from 0 - possible block by scool');
-                            this.log.debug(error);
                         });
                     }
-                    //Next day
-                    this.log.debug('Lese Timetable +1');
-                    this.timetableDate.setDate(this.timetableDate.getDate() + 1);
-                    untis.getOwnTimetableFor(this.timetableDate).then(async (timetable) => {
+                    const nextDay = new Date(this.timetableDate);
+                    nextDay.setDate(nextDay.getDate() + 1);
+                    untis.getOwnTimetableFor(nextDay).then(async (timetable) => {
                         await this.setTimeTable(timetable, 1);
-                    }).catch(async (error) => {
-                        this.log.error('Cannot read Timetable data from +1 - possible block by scool');
-                        this.log.debug(error);
                     });
                 }).catch(async (error) => {
-                    this.log.error('Cannot read Timetable for today - possible block by scool');
+                    this.log.error('Error reading own timetable');
                     this.log.debug(error);
                 });
-                this.log.debug('Load Message center');
-                //get Messages from Center
+
                 untis.getNewsWidget(new Date()).then((newsFeed) => {
-                    this.log.debug('Get news feed from API');
-                    this.log.debug(JSON.stringify(newsFeed));
                     this.setNewsFeed(newsFeed);
-                }).catch(async (error) => {
-                    this.log.info('Cannot read Message Center - possible block by scool');
-                    this.log.debug(error);
-                });
+                }).catch(err => this.log.debug(err));
+
                 untis.getInbox().then((messages) => {
-                    this.log.debug('Get inbox from API');
-                    this.log.debug(JSON.stringify(messages));
                     this.setInbox(messages);
-                }).catch(async (error) => {
-                    this.log.info('Cannot read Inbox - possible block by scool');
-                    this.log.debug(error);
-                });
+                }).catch(err => this.log.debug(err));
             }).catch(async (error) => {
                 this.log.error(error);
-                this.log.error('Login WebUntis failed');
                 await this.setStateAsync('info.connection', false, true);
             });
         }
-        // Next round in one Hour
         this.startHourSchedule();
     }
-    //FUnktion for Inbox Data
+
     async setInbox(messages) {
-        await this.setObjectNotExistsAsync('inbox.inbox-date', {
-            type: 'state',
-            common: {
-                name: 'inbox-date',
-                role: 'value',
-                type: 'string',
-                write: false,
-                read: true,
-            },
-            native: {},
-        }).catch((error) => {
-            this.log.error(error);
-        });
-        await this.setStateAsync('inbox.inbox-date', new Date().toString(), true);
+        await this.createAndSetState('inbox.inbox-date', new Date().toString(), 'string', 'inbox-date');
         let index = 0;
         for (const message of messages.incomingMessages) {
-            await this.setObjectNotExistsAsync('inbox.' + index + '.subject', {
-                type: 'state',
-                common: {
-                    name: 'subject',
-                    role: 'value',
-                    type: 'string',
-                    write: false,
-                    read: true,
-                },
-                native: {},
-            }).catch((error) => {
-                this.log.error(error);
-            });
-            await this.setStateAsync('inbox.' + index + '.subject', message.subject, true);
-            await this.setObjectNotExistsAsync('inbox.' + index + '.contentPreview', {
-                type: 'state',
-                common: {
-                    name: 'contentPreview',
-                    role: 'value',
-                    type: 'string',
-                    write: false,
-                    read: true,
-                },
-                native: {},
-            }).catch((error) => {
-                this.log.error(error);
-            });
-            await this.setStateAsync('inbox.' + index + '.contentPreview', message.contentPreview, true);
-            //Count Element
-            index = index + 1;
+            await this.createAndSetState('inbox.' + index + '.subject', message.subject);
+            await this.createAndSetState('inbox.' + index + '.contentPreview', message.contentPreview);
+            index++;
         }
         this.deleteOldInboxObject(index);
     }
-    //Function for Newsfeed
+
     async setNewsFeed(newsFeed) {
-        await this.setObjectNotExistsAsync('newsfeed.newsfeed-date', {
-            type: 'state',
-            common: {
-                name: 'newsfeed-date',
-                role: 'value',
-                type: 'string',
-                write: false,
-                read: true,
-            },
-            native: {},
-        }).catch((error) => {
-            this.log.error(error);
-        });
-        await this.setStateAsync('newsfeed.newsfeed-date', new Date().toString(), true);
+        await this.createAndSetState('newsfeed.newsfeed-date', new Date().toString(), 'string', 'newsfeed-date');
         let index = 0;
         for (const feed of newsFeed.messagesOfDay) {
-            await this.setObjectNotExistsAsync('newsfeed.' + index + '.subject', {
-                type: 'state',
-                common: {
-                    name: 'subject',
-                    role: 'value',
-                    type: 'string',
-                    write: false,
-                    read: true,
-                },
-                native: {},
-            }).catch((error) => {
-                this.log.error(error);
-            });
-            await this.setStateAsync('newsfeed.' + index + '.subject', feed.subject, true);
-            await this.setObjectNotExistsAsync('newsfeed.' + index + '.text', {
-                type: 'state',
-                common: {
-                    name: 'text',
-                    role: 'value',
-                    type: 'string',
-                    write: false,
-                    read: true,
-                },
-                native: {},
-            }).catch((error) => {
-                this.log.error(error);
-            });
-            await this.setStateAsync('newsfeed.' + index + '.text', feed.text, true);
-            //Count Element
-            index = index + 1;
+            await this.createAndSetState('newsfeed.' + index + '.subject', feed.subject);
+            await this.createAndSetState('newsfeed.' + index + '.text', feed.text);
+            index++;
         }
         this.deleteOldNewsFeedObject(index);
     }
-    //Function for Timetable
+
     async setTimeTable(timetable, dayindex) {
-        //Info from this date is the timetable
-        await this.setObjectNotExistsAsync(dayindex + '.timetable-date', {
-            type: 'state',
-            common: {
-                name: 'timetable-date',
-                role: 'value',
-                type: 'string',
-                write: false,
-                read: true,
-            },
-            native: {},
-        }).catch((error) => {
-            this.log.error(error);
-        });
-        await this.setStateAsync(dayindex + '.timetable-date', this.timetableDate.toString(), true);
+        await this.createAndSetState(dayindex + '.timetable-date', this.timetableDate.toString());
+        
         let index = 0;
         let minTime = 2399;
         let maxTime = 0;
         let exceptions = false;
-        //sorting for time
+
         timetable = timetable.sort((a, b) => a.startTime - b.startTime);
-        this.log.debug(JSON.stringify(timetable));
+        // Kürzel → Langname aller Lehrer des Tages (für "Vertretung: X statt Y")
+        const lehrerLang = {};
+        for (const e of timetable) for (const t of (e.te || [])) if (t.name && t.longname) lehrerLang[t.name] = t.longname;
+
         for (const element of timetable) {
-            this.log.debug('Element found: ' + index.toString());
-            this.log.debug(JSON.stringify(element));
-            //create an Object for each elemnt on the day
-            await this.setObjectNotExistsAsync(dayindex + '.' + index.toString() + '.startTime', {
-                type: 'state',
-                common: {
-                    name: 'startTime',
-                    role: 'value',
-                    type: 'string',
-                    write: false,
-                    read: true,
-                },
-                native: {},
-            }).catch((error) => {
-                this.log.error(error);
-            });
-            await this.setStateAsync(dayindex + '.' + index.toString() + '.startTime', webuntis_1.default.convertUntisTime(element.startTime, this.timetableDate).toString(), true);
-            //save mintime
-            if (minTime > element.startTime)
-                minTime = element.startTime;
-            await this.setObjectNotExistsAsync(dayindex + '.' + index.toString() + '.endTime', {
-                type: 'state',
-                common: {
-                    name: 'endTime',
-                    role: 'value',
-                    type: 'string',
-                    write: false,
-                    read: true,
-                },
-                native: {},
-            }).catch((error) => {
-                this.log.error(error);
-            });
-            await this.setStateAsync(dayindex + '.' + index.toString() + '.endTime', webuntis_1.default.convertUntisTime(element.endTime, this.timetableDate).toString(), true);
-            //save maxtime
-            if (maxTime < element.endTime)
-                maxTime = element.endTime;
-            await this.setObjectNotExistsAsync(dayindex + '.' + index.toString() + '.name', {
-                type: 'state',
-                common: {
-                    name: 'name',
-                    role: 'value',
-                    type: 'string',
-                    write: false,
-                    read: true,
-                },
-                native: {},
-            }).catch((error) => {
-                this.log.error(error);
-            });
-            if (element.su && element.su.length > 0) {
-                await this.setStateAsync(dayindex + '.' + index.toString() + '.name', element.su[0].name, true);
+            const lessonPath = `${dayindex}.${index}`;
+
+            // Zeiten
+            await this.createAndSetState(lessonPath + '.startTime', webuntis_1.default.convertUntisTime(element.startTime, this.timetableDate).toString());
+            if (minTime > element.startTime) minTime = element.startTime;
+            
+            await this.createAndSetState(lessonPath + '.endTime', webuntis_1.default.convertUntisTime(element.endTime, this.timetableDate).toString());
+            if (maxTime < element.endTime) maxTime = element.endTime;
+
+            // Name
+            const subjectName = (element.su && element.su.length > 0) ? element.su[0].name : null;
+            await this.createAndSetState(lessonPath + '.name', subjectName);
+
+            // Lehrer (Lücke geschlossen: Multi-Lehrer Support)
+            const teachers = (element.te && element.te.length > 0) 
+                ? element.te.map(t => t.longname || t.name).join(', ') 
+                : null;
+            await this.createAndSetState(lessonPath + '.teacher', teachers);
+
+            // Raum (Lücke geschlossen: Multi-Raum Support)
+            const rooms = (element.ro && element.ro.length > 0) 
+                ? element.ro.map(r => r.name).join(', ') 
+                : null;
+            await this.createAndSetState(lessonPath + '.room', rooms);
+
+            // Info & Vertretungstext (Lücke geschlossen: Kombination beider Felder)
+            let infoText = '';
+            if (typeof element.info === 'string') infoText = element.info;
+            else if (element.info && element.info.text) infoText = element.info.text;
+            
+            // Vertretung/Raumwechsel: WebUntis setzt dafür keinen code, sondern liefert den ursprünglichen Lehrer/Raum als orgname
+            const lehrerWechsel = (element.te || []).filter(t => t.orgname && t.orgname !== t.name);
+            const raumWechsel = (element.ro || []).filter(r => r.orgname && r.orgname !== r.name);
+            const wechsel = [
+                ...lehrerWechsel.map(t => `Vertretung ${t.longname || t.name} statt ${lehrerLang[t.orgname] || t.orgname}`),
+                ...raumWechsel.map(r => `Raum ${r.name} statt ${r.orgname}`),
+            ].join(', ');
+            if (wechsel) infoText = infoText ? `${infoText} | ${wechsel}` : wechsel;
+
+            if (element.substText) {
+                infoText = infoText ? `${infoText} | Vertretung: ${element.substText}` : element.substText;
             }
-            else {
-                await this.setStateAsync(dayindex + '.' + index.toString() + '.name', null, true);
-            }
-            await this.setObjectNotExistsAsync(dayindex + '.' + index.toString() + '.teacher', {
-                type: 'state',
-                common: {
-                    name: 'teacher',
-                    role: 'value',
-                    type: 'string',
-                    write: false,
-                    read: true,
-                },
-                native: {},
-            }).catch((error) => {
-                this.log.error(error);
-            });
-            if (element.te && element.te.length > 0) {
-                await this.setStateAsync(dayindex + '.' + index.toString() + '.teacher', element.te[0].longname, true);
-            }
-            else {
-                await this.setStateAsync(dayindex + '.' + index.toString() + '.teacher', null, true);
-            }
-            await this.setObjectNotExistsAsync(dayindex + '.' + index.toString() + '.room', {
-                type: 'state',
-                common: {
-                    name: 'room',
-                    role: 'value',
-                    type: 'string',
-                    write: false,
-                    read: true,
-                },
-                native: {},
-            }).catch((error) => {
-                this.log.error(error);
-            });
-            if (element.ro && element.ro.length > 0) {
-                await this.setStateAsync(dayindex + '.' + index.toString() + '.room', element.ro[0].name, true);
-            }
-            else {
-                await this.setStateAsync(dayindex + '.' + index.toString() + '.room', null, true);
-            }
-            await this.setObjectNotExistsAsync(dayindex + '.' + index.toString() + '.code', {
-                type: 'state',
-                common: {
-                    name: 'code',
-                    role: 'value',
-                    type: 'string',
-                    write: false,
-                    read: true,
-                },
-                native: {},
-            }).catch((error) => {
-                this.log.error(error);
-            });
-            if (element.code == 'cancelled' || element.code == 'irregular') {
-                this.log.debug('Exception in lesson found');
+            await this.createAndSetState(lessonPath + '.info', infoText, 'string', 'Zusätzliche Info');
+
+            // Status / Code (Lücke geschlossen: Erfassung von Verschiebungen & Wechseln)
+            const changeCodes = ['cancelled', 'irregular', 'substitution', 'roomchange', 'shift'];
+            if (element.code && changeCodes.includes(element.code)) {
                 exceptions = true;
-                await this.setStateAsync(dayindex + '.' + index.toString() + '.code', element.code, true);
+                await this.createAndSetState(lessonPath + '.code', element.code);
+            } else if (element.code !== 'cancelled' && (lehrerWechsel.length || raumWechsel.length)) {
+                exceptions = true;
+                await this.createAndSetState(lessonPath + '.code', lehrerWechsel.length ? 'substitution' : 'roomchange');
+            } else {
+                await this.createAndSetState(lessonPath + '.code', 'regular');
             }
-            else {
-                await this.setStateAsync(dayindex + '.' + index.toString() + '.code', 'regular', true);
-            }
-            //Next Elemet
-            index = index + 1;
+
+            index++;
         }
+
         if (index > 0) {
-            //we have min one element
-            await this.setObjectNotExistsAsync(dayindex + '.minTime', {
-                type: 'state',
-                common: {
-                    name: 'minTime',
-                    role: 'value',
-                    type: 'string',
-                    write: false,
-                    read: true,
-                },
-                native: {},
-            }).catch((error) => {
-                this.log.error(error);
-            });
-            await this.setStateAsync(dayindex + '.minTime', webuntis_1.default.convertUntisTime(minTime, this.timetableDate).toString(), true);
-            await this.setObjectNotExistsAsync(dayindex + '.maxTime', {
-                type: 'state',
-                common: {
-                    name: 'maxTime',
-                    role: 'value',
-                    type: 'string',
-                    write: false,
-                    read: true,
-                },
-                native: {},
-            }).catch((error) => {
-                this.log.error(error);
-            });
-            await this.setStateAsync(dayindex + '.maxTime', webuntis_1.default.convertUntisTime(maxTime, this.timetableDate).toString(), true);
-            await this.setObjectNotExistsAsync(dayindex + '.exceptions', {
-                type: 'state',
-                common: {
-                    name: 'exceptions',
-                    role: 'value',
-                    type: 'boolean',
-                    write: false,
-                    read: true,
-                },
-                native: {},
-            }).catch((error) => {
-                this.log.error(error);
-            });
-            await this.setStateAsync(dayindex + '.exceptions', exceptions, true);
+            await this.createAndSetState(dayindex + '.minTime', webuntis_1.default.convertUntisTime(minTime, this.timetableDate).toString());
+            await this.createAndSetState(dayindex + '.maxTime', webuntis_1.default.convertUntisTime(maxTime, this.timetableDate).toString());
+            await this.createAndSetState(dayindex + '.exceptions', exceptions, 'boolean');
         }
-        //check if an Object is over the max index
         await this.deleteOldTimetableObject(dayindex, index);
     }
-    //Helpfunction
+
+    // Hilfsfunktion zur Vermeidung von Redundanz
+    async createAndSetState(path, value, type = 'string', name = '') {
+        await this.setObjectNotExistsAsync(path, {
+            type: 'state',
+            common: {
+                name: name || path.split('.').pop(),
+                role: 'value',
+                type: type,
+                write: false,
+                read: true,
+            },
+            native: {},
+        }).catch((error) => this.log.error(error));
+        await this.setStateAsync(path, value, true);
+    }
+
     async deleteOldInboxObject(index) {
         const delObject = await this.getObjectAsync('inbox.' + index + '.subject');
         if (delObject) {
-            this.log.debug('Object zum löschen gefunden - ' + index.toString());
-            await this.delObjectAsync(index.toString(), { recursive: true });
-            // Have one delted, next round
+            await this.delObjectAsync('inbox.' + index, { recursive: true });
             await this.deleteOldInboxObject(index + 1);
         }
     }
+
     async deleteOldNewsFeedObject(index) {
         const delObject = await this.getObjectAsync('newsfeed.' + index + '.text');
         if (delObject) {
-            this.log.debug('Object zum löschen gefunden - ' + index.toString());
-            await this.delObjectAsync(index.toString(), { recursive: true });
-            // Have one delted, next round
+            await this.delObjectAsync('newsfeed.' + index, { recursive: true });
             await this.deleteOldNewsFeedObject(index + 1);
         }
     }
+
     async deleteOldTimetableObject(dayindex, index) {
-        this.log.debug('Object search in deleteOldTimetableObject for: ' + index.toString());
-        const delObject = await this.getObjectAsync(dayindex + '.' + index.toString() + '.name');
+        const delObject = await this.getObjectAsync(dayindex + '.' + index + '.name');
         if (delObject) {
-            this.log.debug('Object for deleting found: ' + index.toString());
-            await this.delObjectAsync(dayindex + '.' + index.toString(), { recursive: true });
-            // Have one delted, next round
+            await this.delObjectAsync(dayindex + '.' + index, { recursive: true });
             await this.deleteOldTimetableObject(dayindex, index + 1);
         }
     }
+
     getNextWorkDay(date) {
         const d = new Date(+date);
         const day = d.getDay() || 7;
         d.setDate(d.getDate() + (day > 4 ? 8 - day : 1));
         return d;
     }
-    //thanks to klein0r
+
     getMillisecondsToNextFullHour() {
         const now = new Date();
-        const nextHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1, 0, 5, 0); // add 5 seconds to ensure we are in the next hour
+        const nextHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1, 0, 5, 0);
         return nextHour.getTime() - now.getTime();
     }
 }
+
 if (require.main !== module) {
-    // Export the constructor in compact mode
     module.exports = (options) => new Webuntis(options);
-}
-else {
-    // otherwise start the instance directly
+} else {
     (() => new Webuntis())();
 }
-//# sourceMappingURL=main.js.map
